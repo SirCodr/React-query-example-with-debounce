@@ -1,6 +1,7 @@
-import React, { useRef, useState, useEffect } from "react";
-import { QueryClient, QueryClientProvider, useQuery } from "react-query";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { QueryClient, QueryClientProvider, useMutation, useQuery } from "react-query";
 import useDebounce from "./hooks/useDebounce";
+import { Post } from "./api";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,16 @@ const Example = () => {
       res.json()
     )
   );
+
+  const mutation = useMutation(newItem => {
+    return Post(newItem)
+  })
+
+  const HandlePost = useCallback(() => {
+    if(!mutation.isLoading){
+      mutation.mutate(userDebounced)
+    }
+  }, [userDebounced])
 
   if (error) return "An error has occurred: " + error.message;
 
@@ -65,6 +76,9 @@ const Example = () => {
           setUser(e.target.value);
         }}
       />
+      <button onClick={HandlePost} disabled={mutation.isLoading}>
+        Submit
+      </button>
       {data && (
         <div>
           <h1>{data.name}</h1>
@@ -72,7 +86,7 @@ const Example = () => {
           <strong>👀 {data.followers}</strong>{" "}
         </div>
       )}
-      {isLoading && "Loading..."}
+      {(isLoading || mutation.isLoading) && "Loading..."}
     </div>
   );
 };
